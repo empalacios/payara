@@ -4,6 +4,11 @@ Vagrant.configure("2") do |config|
   config.vm.box = "debian/contrib-buster64"
 
   config.vm.network "private_network", ip: "192.168.56.5"
+  config.vm.network "forwarded_port", guest: 4848, host: 4848
+
+  config.vm.provider "virtualbox" do |v|
+    v.memory = 1024
+  end
 
   config.vm.provision "shell", inline: <<-SHELL
     apt-get update
@@ -22,16 +27,10 @@ Vagrant.configure("2") do |config|
       a2ensite proxy-8080
       systemctl restart apache2
 
-    # maven
-      wget https://www-us.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.zip -O /opt/apache-maven-3.6.3-bin.zip 2>/dev/null
-      unzip /opt/apache-maven-3.6.3-bin.zip -d /opt
-      export PATH="$PATH:/opt/apache-maven-3.6.3/bin"
-      echo 'export PATH="$PATH:/opt/apache-maven-3.6.3/bin"' >> /etc/profile.d/env.sh
-
     # payara
       payaradir=payara5
       wget https://s3-eu-west-1.amazonaws.com/payara.fish/Payara+Downloads/5.2020.7/payara-5.2020.7.zip -O payara-5.2020.7.zip 2>/dev/null
-      unzip payara-5.2020.7.zip -d /opt
+      unzip payara-5.2020.7.zip -d /opt 2>/dev/null
       useradd payara -m
       chown -R payara:payara /opt/$payaradir
       su - payara
@@ -48,7 +47,7 @@ Vagrant.configure("2") do |config|
       ./asadmin stop-domain
       /etc/init.d/payara_domain1 start
       # variables del sistema
-        sleep 20
+        sleep 10
         sh /vagrant/set_environment_variables.sh
   SHELL
 end
